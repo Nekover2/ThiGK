@@ -25,7 +25,7 @@
       <button class="btn" @click="appendNumber(3)">3</button>
       <button class="btn zero-button" @click="appendNumber(0)">0</button>
       <button class="btn" @click="appendDot">.</button>
-      <button class="btn empty-btn"></button>
+      <button class="btn empty-btn" @click="clearAll"></button>
     </div>
   </div>
 </template>
@@ -74,6 +74,16 @@ const setOperation = (act, symbol) => {
   operatorSymbol.value = symbol;
   isNewInput.value = true;
   historyDisplay.value = `${number1.value} ${symbol}`;
+};
+
+// Clear / reset the calculator display and state
+const clearAll = () => {
+  currentDisplay.value = '0';
+  number1.value = null;
+  action.value = null;
+  operatorSymbol.value = '';
+  isNewInput.value = true;
+  historyDisplay.value = '';
 };
 
 const calculateResult = async () => {
