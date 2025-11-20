@@ -6,10 +6,10 @@
     </div>
 
     <div class="buttons">
-      <button class="btn op" @click="setOperation(4, '/')">/</button>
-      <button class="btn op" @click="setOperation(3, '*')">*</button>
-      <button class="btn op" @click="setOperation(2, '-')">-</button>
-      <button class="btn op" @click="setOperation(1, '+')">+</button>
+      <button class="btn op modify-btn" @click="setOperation(4, '/')">/</button>
+      <button class="btn op modify-btn" @click="setOperation(3, '*')">*</button>
+      <button class="btn op modify-btn" @click="setOperation(2, '-')">-</button>
+      <button class="btn op modify-btn" @click="setOperation(1, '+')">+</button>
 
       <button class="btn" @click="appendNumber(7)">7</button>
       <button class="btn" @click="appendNumber(8)">8</button>
@@ -23,7 +23,9 @@
 
       <button class="btn" @click="appendNumber(2)">2</button>
       <button class="btn" @click="appendNumber(3)">3</button>
-      <button class="btn zero" @click="appendNumber(0)">0</button>
+      <button class="btn zero-button" @click="appendNumber(0)">0</button>
+      <button class="btn" @click="appendDot">.</button>
+      <button class="btn empty-btn"></button>
     </div>
   </div>
 </template>
@@ -31,12 +33,12 @@
 <script setup>
 import { ref } from 'vue';
 
-const currentDisplay = ref('0'); // Số hiện tại trên màn hình
-const number1 = ref(null);       // Số hạng thứ nhất
-const action = ref(null);        // Mã hành động (1,2,3,4)
-const operatorSymbol = ref('');  // Ký tự phép tính (+,-,*,/)
-const isNewInput = ref(true);    // Cờ để reset màn hình khi nhập số mới
-const historyDisplay = ref('');  // Hiển thị dòng trên (VD: 1 + 5 =)
+const currentDisplay = ref('0');
+const number1 = ref(null);
+const action = ref(null);
+const operatorSymbol = ref('');
+const isNewInput = ref(true);
+const historyDisplay = ref('');
 
 // Hàm nhập số
 const appendNumber = (num) => {
@@ -44,11 +46,28 @@ const appendNumber = (num) => {
     currentDisplay.value = num.toString();
     isNewInput.value = false;
   } else {
-    currentDisplay.value += num.toString();
+    // Nếu số đang là 0 và nhập số khác 0 thì thay thế (tránh 05, 06)
+    if (currentDisplay.value === '0') {
+      currentDisplay.value = num.toString();
+    } else {
+      currentDisplay.value += num.toString();
+    }
   }
 };
 
-// Hàm chọn phép tính
+// Hàm nhập dấu chấm
+const appendDot = () => {
+  if (isNewInput.value) {
+    currentDisplay.value = '0.';
+    isNewInput.value = false;
+    return;
+  }
+  // Chỉ thêm dấu chấm nếu chưa có
+  if (!currentDisplay.value.includes('.')) {
+    currentDisplay.value += '.';
+  }
+};
+
 const setOperation = (act, symbol) => {
   number1.value = parseFloat(currentDisplay.value);
   action.value = act;
@@ -71,7 +90,6 @@ const calculateResult = async () => {
   };
 
   try {
-    // Gọi API 
     const response = await fetch('http://localhost/ThiGK/api/calculator.php', {
       method: 'POST',
       headers: {
@@ -84,20 +102,19 @@ const calculateResult = async () => {
 
     if (data.error) {
       currentDisplay.value = "Error";
-      alert(data.error);
+      // alert(data.error); // Có thể bật lại nếu muốn hiện popup
     } else {
-      currentDisplay.value = data.result;
+      currentDisplay.value = data.result.toString();
       isNewInput.value = true;
     }
   } catch (error) {
-    console.error("Lỗi kết nối:", error);
+    console.error("Error:", error);
     currentDisplay.value = "Err";
   }
 };
 </script>
 
 <style scoped>
-
 .calculator-container {
   width: 320px;
   background-color: #202124;
@@ -105,6 +122,7 @@ const calculateResult = async () => {
   border-radius: 10px;
   overflow: hidden;
   font-family: Arial, sans-serif;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
 }
 
 .display {
@@ -112,7 +130,7 @@ const calculateResult = async () => {
   color: white;
   text-align: right;
   padding: 20px;
-  height: 100px;
+  height: 150px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -121,46 +139,67 @@ const calculateResult = async () => {
 .history {
   font-size: 18px;
   color: #9aa0a6;
+  margin-bottom: 5px;
+  min-height: 24px;
 }
 
 .current {
   font-size: 48px;
+  word-wrap: break-word;
+}
+.modify-btn {
+  background-color: #2d4d7c !important;
+  color: white !important;
 }
 
 .buttons {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  background-color: #3c4043;
+  grid-template-columns: repeat(4, 1fr); /* Grid 4 cột đều nhau */
+  background-color: #3a3a3a;
+  gap: 1px; /* Tạo khoảng cách nhỏ giữa các nút */
+  border-top: 1px solid #5f6368;
+  margin: 1px;
 }
 
+.zero-button {
+  grid-column: span 2; /* Nút 0 chiếm 2 cột */
+}
+.empty-btn {
+  background-color: #1e1e1e !important;
+  border: none;
+  cursor: default;
+  grid-column: span 3;
+}
 .btn {
-  background-color: #3c4043;
-  border: 1px solid #202124;
+  background-color: #3a3a3a;
+  border: none;
   color: white;
   font-size: 24px;
   height: 80px;
   cursor: pointer;
-  outline: none;
+  transition: background 0.2s;
 }
 
 .btn:hover {
   background-color: #5f6368;
 }
 
+.btn:active {
+  background-color: #70757a;
+}
 
+/* Nút phép tính (Hàng 1) */
 .btn.op {
-  background-color: #303134;
-  color: #8ab4f8; 
-  background-color: #2d3e50; 
+  background-color: #2d4d7c;
   color: white;
 }
 
-
+/* Nút Bằng (=) màu xanh dương */
 .btn.eq {
   background-color: #4285f4;
   color: white;
-  grid-column: 4;
-  grid-row: 2 / 4;
 }
-
+.btn.eq:hover {
+  background-color: #5294fa;
+}
 </style>
